@@ -1,18 +1,48 @@
 <?php
+include_once('config.php');
+session_start();
 
-    if(isset($_POST['submit']))
-        
-    {
-        include_once('config.php');
+// ===== Cadastro =====
+if (isset($_POST['cadastrar'])) {
+    $nome = $_POST['nome'];
+    $email = $_POST['email'];
+    $senha = $_POST['senha'];
 
-        $nome = $_POST['nome'];
-        $email = $_POST['email'];
-        
+    // Criptografa a senha antes de salvar
+    $senhaHash = password_hash($senha, PASSWORD_DEFAULT);
 
-        $result = mysqli_query ($conexao, "INSERT INTO usuarios(nome, email)
-        VALUES ('$nome', '$email')");
+    $result = mysqli_query($conexao, "INSERT INTO usuarios(nome, email, senha)
+    VALUES ('$nome', '$email', '$senhaHash')");
+
+    if ($result) {
+        echo "<script>alert('Cadastro realizado com sucesso!');</script>";
+    } else {
+        echo "<script>alert('Erro ao cadastrar! Verifique se o e-mail já está em uso.');</script>";
     }
+}
 
+// ===== Login =====
+if (isset($_POST['logar'])) {
+    $email = $_POST['email'];
+    $senha = $_POST['senha'];
+
+    $sql = "SELECT * FROM usuarios WHERE email = '$email'";
+    $resultado = mysqli_query($conexao, $sql);
+
+    if (mysqli_num_rows($resultado) > 0) {
+        $usuario = mysqli_fetch_assoc($resultado);
+
+        if (password_verify($senha, $usuario['senha'])) {
+            $_SESSION['usuario'] = $usuario['nome'];
+            header("Location: sistema.php");
+            exit;
+        } else {
+            echo "<script>alert('Senha incorreta!');</script>";
+        }
+    } else {
+        echo "<script>alert('E-mail não encontrado!');</script>";
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -25,65 +55,54 @@
     <title>Helenão</title>
 </head>
 <body>
-        <div class="container">
-            <div class="form-box login">
-                <form action="">
-                    <h1>Login</h1>
-                    <div class="input-box">
-                        <input type="text" placeholder="E-mail" required>
-                    </div>
+    <div class="container">
+        <!-- Login -->
+        <div class="form-box login">
+            <form method="post" action="">
+                <h1>Login</h1>
+                <div class="input-box">
+                    <input type="text" name="email" placeholder="E-mail" required>
+                </div>
+                <div class="input-box">
+                    <input type="password" name="senha" placeholder="Senha" required>                    
+                </div>
+                <button type="submit" name="logar" class="btn">Entrar</button>
+            </form>
+        </div>
 
-                    <div class="input-box">
-                        <input type="password" placeholder="Senha" required>                    
-                    </div>
+        <!-- Cadastro -->
+        <div class="form-box register">
+            <form method="post" action="">
+                <h1>Cadastre-se</h1>
+                <div class="input-box">
+                    <input type="text" name="nome" placeholder="Usuário" required>
+                </div>
+                <div class="input-box">
+                    <input type="text" name="email" placeholder="E-mail" required>
+                </div>
+                <div class="input-box">
+                    <input type="password" name="senha" placeholder="Senha" required>                    
+                </div>
+                <button type="submit" name="cadastrar" class="btn">Cadastrar</button>
+            </form>
+        </div>
 
-                    <div class="forgot-link">
-                        <a href="#">Esqueceu a senha?</a>
-                    </div>
-
-                    <button  href="sistema.php"  type="submit"  class="btn">Entrar</button>
-
-                </form>
+        <!-- Painéis de alternância -->
+        <div class="toggle-box">
+            <div class="toggle-panel toggle-left">
+                <h1 class="h1 register">Não tem uma conta? Cadastre-se!</h1>
+                <img src="img/cadastro.png" alt="Cadastro">
+                <button class="btn register-btn">Cadastre-se</button>
             </div>
 
-            <div class="container">
-                <div class="form-box register">
-                    <form action="">
-                        <h1>Cadastre-se</h1>
-                        <div class="input-box">
-                            <input type="text" placeholder="Usuário" required>
-                        </div>
-                        
-                        <div class="input-box">
-                            <input type="text" placeholder="E-mail" required>
-                        </div>
-
-                        <div class="input-box">
-                            <input type="password" placeholder="Senha" required>                    
-                        </div>
-    
-                        <button type="submit"  class="btn">Cadastrar</button>
-    
-                    </form>
-                </div>
-
-                <div class="toggle-box">
-
-                    <div class="toggle-panel toggle-left">
-                        <h1 class="h1 register">Não tem uma conta? Cadastre-se!</h1>
-                        <img src="img/cadastro.png">
-                        <button class="btn register-btn">Cadastre-se</button>
-                    </div>
-
-                    <div class="toggle-panel toggle-right">
-                        <h1 class="h1 login">Já tem uma conta? Vamos logar!</h1>
-                        <img src="img/login.png">
-                        <button class="btn login-btn">Logar</button>
-                    </div>
-
-                </div>
+            <div class="toggle-panel toggle-right">
+                <h1 class="h1 login">Já tem uma conta? Vamos logar!</h1>
+                <img src="img/login.png" alt="Login">
+                <button class="btn login-btn">Logar</button>
+            </div>
         </div>
-        <script src="script.js"></script>
+    </div>
+
+    <script src="script.js"></script>
 </body>
 </html>
-
